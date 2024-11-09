@@ -5,11 +5,11 @@
 ## Run Locally
 Clone the project
 
-    git clone 
+    git clone https://github.com/erayjsx/react-native-shopier-app.git 
 
 Go to the project directory
 
-    cd plane
+    cd react-native-shopier-app
 
 Install dependencies
 
