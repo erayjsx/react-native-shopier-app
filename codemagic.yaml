@@ -5,8 +5,8 @@ workflows:
         instance_type: mac_mini_m2
         environment:
             groups:
-                - android_credentials
-                - expo_credentials
+            #    - android_credentials
+            #    - expo_credentials
             # vars:
             #     CM_KEYSTORE: Encrypted() # <-- Put your encrypted keystore file here
             #     CM_KEYSTORE_PASSWORD: Encrypted() # <-- Put your encrypted keystore password here
