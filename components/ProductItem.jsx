@@ -22,7 +22,7 @@ export default function ProductItem({
       />
       <View style={{ gap: 12, width: "80%" }}>
         <Text style={styles.itemTitle}>{title}</Text>
-        <Text>{price}</Text>
+        <Text style={{ fontFamily: "SemiBold", fontSize: 16 }}>{price}</Text>
       </View>
     </Pressable>
   );
@@ -41,6 +41,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   itemTitle: {
-    fontWeight: "600",
+    fontFamily: "Medium",
+    fontSize: 16,
   },
 });

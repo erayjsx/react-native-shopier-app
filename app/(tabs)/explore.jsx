@@ -12,6 +12,7 @@ import { router } from "expo-router";
 import ProductItem from "../../components/ProductItem";
 import { useCategoriesStore } from "../../store/useCategoriesStore";
 import useProductStore from "../../store/useProductStore";
+import NotFound from "../../components/NotFound";
 
 export default function ExploreScreen() {
   const [query, setQuery] = useState("");
@@ -31,32 +32,40 @@ export default function ExploreScreen() {
     <View style={styles.container}>
       <TextInput
         placeholder="Ürün Ara"
+        placeholderTextColor="#aaa"
+        inputMode="text"
+        textBreakStrategy="simple"
         value={query}
         onChangeText={(text) => setQuery(text)}
         style={styles.input}
       />
 
       {query ? (
-        <FlatList
-          data={searchItems}
-          renderItem={({ item, index }) => (
-            <ProductItem
-              key={item.id}
-              title={item.title}
-              price={`${item?.priceData.price} ${item.priceData.currency}`}
-              image={item.media[0].url}
-              onPress={() =>
-                router.push({
-                  pathname: "/detail",
-                  params: { id: item.id, title: item.title },
-                })
-              }
-            />
-          )}
-        />
+        <>
+          {searchItems == 0 && <NotFound />}
+          <FlatList
+            data={searchItems}
+            renderItem={({ item, index }) => (
+              <ProductItem
+                key={item.id}
+                title={item.title}
+                price={`${item?.priceData.price} ${item.priceData.currency}`}
+                image={item.media[0].url}
+                onPress={() =>
+                  router.push({
+                    pathname: "/detail",
+                    params: { id: item.id, title: item.title },
+                  })
+                }
+              />
+            )}
+          />
+        </>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20 }}>
-          <Text style={{ fontWeight: "700" }}>Kategoriler</Text>
+          <Text style={{ fontFamily: "SemiBold", fontSize: 16 }}>
+            Kategoriler
+          </Text>
           <FlatList
             scrollEnabled={false}
             data={categories}
@@ -71,7 +80,9 @@ export default function ExploreScreen() {
                   })
                 }
               >
-                <Text>{item.title}</Text>
+                <Text style={{ fontFamily: "Medium", fontSize: 16 }}>
+                  {item.title}
+                </Text>
               </Pressable>
             )}
           />
@@ -88,14 +99,16 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   input: {
-    padding: 12,
+    padding: 16,
     borderColor: "#ddd",
     borderWidth: 2,
     borderRadius: 10,
     marginHorizontal: 20,
+    fontFamily: "Medium",
   },
   item: {
-    height: 44,
+    height: 52,
+    opacity: 0.7,
     width: "100%",
     borderBottomWidth: 1,
     borderColor: "#eee",
@@ -108,7 +121,7 @@ const styles = StyleSheet.create({
     height: 80,
   },
   itemTitle: {
-    fontWeight: "600",
+    fontFamily: "SemiBold",
   },
   button: {
     marginVertical: 12,
@@ -120,6 +133,6 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontWeight: "700",
+    fontFamily: "SemiBold",
   },
 });

@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { router } from "expo-router";
 import useCartStore from "../../store/useCartStore";
 import RemixIcon from "react-native-remix-icon";
+import NotFound from "../../components/NotFound";
 
 export default function CartScreen() {
   const { products, cart, fetchProducts, removeFromCart } = useCartStore();
@@ -17,6 +18,10 @@ export default function CartScreen() {
   useEffect(() => {
     fetchProducts();
   }, []);
+
+  if (!products || !Array.isArray(products)) {
+    return <Text>Loading...</Text>;
+  }
 
   const cartItems = cart
     .map((id) => products.find((product) => product.id === id))
@@ -28,6 +33,8 @@ export default function CartScreen() {
 
   return (
     <View style={styles.container}>
+      {cartItems == 0 && <NotFound />}
+
       <FlatList
         data={cartItems}
         keyExtractor={(item) => item.id.toString()}
@@ -54,14 +61,14 @@ export default function CartScreen() {
               </Text>
             </View>
             <Pressable onPress={() => removeFromCart(item.id)}>
-              <RemixIcon name="delete-bin-line" color="#de1a2e" size={20} />
+              <RemixIcon name="delete-bin-line" color="#ba2525" />
             </Pressable>
           </Pressable>
         )}
       />
       <View style={{ padding: 20, borderTopWidth: 1, borderColor: "#eee" }}>
-        <Text>Toplam Tutar</Text>
-        <Text style={{ fontWeight: "700", marginTop: 4, fontSize: 18 }}>
+        <Text style={{ fontFamily: "Regular" }}>Toplam Tutar</Text>
+        <Text style={{ fontFamily: "SemiBold", marginTop: 4, fontSize: 18 }}>
           {totalAmount} TL
         </Text>
         <Pressable
@@ -96,7 +103,7 @@ const styles = StyleSheet.create({
     height: 80,
   },
   itemTitle: {
-    fontWeight: "600",
+    fontFamily: "SemiBold",
   },
   button: {
     marginVertical: 12,
@@ -108,6 +115,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontWeight: "700",
+    fontFamily: "Medium",
+    fontSize: 16,
   },
 });

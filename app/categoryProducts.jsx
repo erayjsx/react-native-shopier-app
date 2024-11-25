@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import ProductItem from "../components/ProductItem";
 import useProductStore from "../store/useProductStore";
+import NotFound from "../components/NotFound";
 
 export default function ProductsScreen() {
   const navigation = useNavigation();
@@ -13,7 +14,10 @@ export default function ProductsScreen() {
   useEffect(() => {
     fetchProducts();
 
-    navigation.setOptions({ headerTitle: params?.title });
+    navigation.setOptions({
+      headerTitle: params?.title,
+      headerTitleAlign: "center",
+    });
   }, [navigation]);
 
   const categoryProducts = products?.filter((product) =>
@@ -22,7 +26,7 @@ export default function ProductsScreen() {
 
   return (
     <View style={styles.container}>
-      {!categoryProducts && <Text>Ürün Bulunamadı</Text>}
+      {categoryProducts == 0 && <NotFound />}
 
       <FlatList
         data={categoryProducts}
