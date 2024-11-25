@@ -1,0 +1,112 @@
+# Check out https://docs.codemagic.io/yaml/building-a-react-native-app/ for more information
+# Please review and update values
+
+workflows:
+  react-native-android:
+    name: shopier-expo
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        - keystore_reference
+      groups:
+        - google_play # <-- (Includes GCLOUD_SERVICE_ACCOUNT_CREDENTIALS <-- Put your google-services.json)
+      vars:
+        PACKAGE_NAME: "iocom.erayjs.shopier-expo" # <-- Put your package name here e.g. com.domain.myapp
+      node: 16.14.2
+    triggering:
+      events:
+          - push
+          - tag
+          - pull_request
+      branch_patterns:
+          - pattern: develop
+            include: true
+            source: true
+    scripts:
+      - name: Install dependencies and Expo CLI, and eject app
+        script: |
+          pnpm install
+          npx expo prebuild
+      - name: Set up app/build.gradle
+        script: |
+          mv ./support-files/build.gradle android/app
+      - name: Set Android SDK location
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"          
+      - name: Build Android release
+        script: |
+          LATEST_GOOGLE_PLAY_BUILD_NUMBER=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME")
+          if [ -z LATEST_BUILD_NUMBER ]; then
+              # fallback in case no build number was found from google play. Alternatively, you can `exit 1` to fail the build
+              UPDATED_BUILD_NUMBER=$BUILD_NUMBER
+          else
+              UPDATED_BUILD_NUMBER=$(($LATEST_GOOGLE_PLAY_BUILD_NUMBER + 1))
+          fi
+          cd android
+          ./gradlew bundleRelease \
+            -PversionCode=$UPDATED_BUILD_NUMBER \
+            -PversionName=1.0.$UPDATED_BUILD_NUMBER
+    artifacts:
+        - android/app/build/outputs/**/*.aab
+
+
+  react-native-ios:
+    name: React Native iOS
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.erayjs.shopier-expo
+      vars:
+          XCODE_WORKSPACE: "ExpoApp.xcworkspace" # <-- Put the name of your Xcode workspace here
+          XCODE_SCHEME: "ExpoApp" # <-- Put the name of your Xcode scheme here
+          BUNDLE_ID: "com.erayjs.shopier-expo" # <-- Put your Bundle Id here e.g com.domain.myapp
+          APP_ID: 1616629701 # <-- Put the app id number here. This is found in App Store Connect > App > General > App Information
+      node: 16.14.2
+      xcode: 13.1
+      cocoapods: default
+    triggering:
+        events:
+            - push
+            - tag
+            - pull_request
+        branch_patterns:
+            - pattern: develop
+              include: true
+              source: true
+    scripts:
+      - name: Install dependencies, Expo CLI and eject app
+        script: |
+          yarn install
+          yarn global add expo-cli
+          expo eject
+      - name: Set Info.plist values
+        script: |
+          PLIST=$FCI_BUILD_DIR/$XCODE_SCHEME/Info.plist
+          PLIST_BUDDY=/usr/libexec/PlistBuddy
+          $PLIST_BUDDY -c "Add :ITSAppUsesNonExemptEncryption bool false" $PLIST
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios && pod install
+      - name: Increment build number
+        script: |
+          cd $CM_BUILD_DIR/ios
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_ID")
+          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles --warn-only
+      - name: Build ipa for distribution
+        script: |
+          xcode-project build-ipa \
+            --workspace "$CM_BUILD_DIR/ios/$XCODE_WORKSPACE" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+        - build/ios/ipa/*.ipa
+        - /tmp/xcodebuild_logs/*.log
+        - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+        - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
